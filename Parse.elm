@@ -56,7 +56,7 @@ definition =
         |= defName
         |. spaces
         |. symbol "::="
-        |. spaces
+        |. whitespaces
         |= options
 
 
@@ -76,7 +76,7 @@ options =
         { start = ""
         , separator = "|"
         , end = ""
-        , spaces = spaces
+        , spaces = whitespaces
         , item = option
         , trailing = Forbidden
         }
@@ -158,6 +158,11 @@ isVarChar char =
 spaces : Parser ()
 spaces =
     ignore zeroOrMore (\c -> c == ' ')
+
+
+whitespaces : Parser ()
+whitespaces =
+    ignore zeroOrMore (\c -> c == ' ' || c == '\n')
 
 
 newLines : Parser ()
