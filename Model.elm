@@ -138,4 +138,5 @@ renderOptionPart optionPart =
             "\\" ++ String.fromChar char
 
         Recall defName options ->
-            "<" ++ defName ++ "|" ++ options ++ ">"
+            -- "<" ++ defName ++ "|" ++ options ++ ">"
+            "<" ++ defName ++ ">"

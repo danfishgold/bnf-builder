@@ -1,7 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (Html, program, div, textarea, button, text)
-import Html.Attributes exposing (value)
+import Html exposing (Html, program, div, h1, textarea, button, text)
+import Html.Attributes exposing (value, rows, cols)
 import Html.Events exposing (onInput, onClick)
 import Parse exposing (..)
 import Model exposing (..)
@@ -70,13 +70,22 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ textarea [ onInput EditContent, value model.content ] [] ]
+        [ h1 [] [ text "BNF Builder" ]
+        , div []
+            [ textarea
+                [ cols 80
+                , rows 25
+                , onInput EditContent
+                , value model.content
+                ]
+                []
+            ]
         , case parse model.content of
             Ok grammar ->
                 div []
-                    [ div [] [ text <| toString <| grammar ]
-                    , div [] [ render grammar ]
-                    , div []
+                    [ -- div [] [ text <| toString <| grammar ]
+                      -- div [] [ render grammar ]
+                      div []
                         [ definitionNames grammar
                             |> List.map
                                 (\name ->
