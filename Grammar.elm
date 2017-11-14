@@ -1,8 +1,19 @@
-module Model exposing (..)
+module Grammar
+    exposing
+        ( Grammar
+        , Definition
+        , Option
+        , OptionPart(..)
+        , fromDefinitionList
+        , toDefinitionList
+        , definitionNames
+        , definitionDict
+        , getOptions
+        , render
+        )
 
 import Html exposing (Html, div, text)
 import Dict exposing (Dict)
-import Set
 
 
 type alias Definition =
@@ -23,8 +34,8 @@ type OptionPart
     | Recall String String
 
 
-grammarFromDefs : List Definition -> Grammar
-grammarFromDefs defs =
+fromDefinitionList : List Definition -> Grammar
+fromDefinitionList defs =
     let
         pairs =
             defs
@@ -36,8 +47,8 @@ grammarFromDefs defs =
         Grammar ( Dict.fromList pairs, names )
 
 
-defsFromGrammar : Grammar -> List Definition
-defsFromGrammar (Grammar ( dict, defNames )) =
+toDefinitionList : Grammar -> List Definition
+toDefinitionList (Grammar ( dict, defNames )) =
     let
         definition name =
             case Dict.get name dict of
@@ -70,35 +81,9 @@ getOptions defName (Grammar ( dict, _ )) =
             Ok options
 
 
-errors : Grammar -> List String
-errors (Grammar ( dict, defNames )) =
-    let
-        getRecallDefName optionPart =
-            case optionPart of
-                Recall defName _ ->
-                    Just defName
-
-                _ ->
-                    Nothing
-
-        recallNames =
-            dict
-                |> Dict.values
-                |> List.concat
-                |> List.concat
-                |> List.filterMap getRecallDefName
-
-        missingDefinitions =
-            Set.diff (Set.fromList recallNames) (Set.fromList defNames)
-    in
-        missingDefinitions
-            |> Set.toList
-            |> List.map (\defName -> "Can't find <" ++ defName ++ ">")
-
-
 render : Grammar -> Html msg
 render =
-    defsFromGrammar >> renderDefinitions
+    toDefinitionList >> renderDefinitions
 
 
 renderDefinitions : List Definition -> Html msg

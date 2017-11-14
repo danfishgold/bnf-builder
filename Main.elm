@@ -3,9 +3,9 @@ module Main exposing (..)
 import Html exposing (Html, program, div, h1, textarea, button, text)
 import Html.Attributes exposing (value, rows, cols)
 import Html.Events exposing (onInput, onClick)
-import Parse exposing (..)
-import Model exposing (..)
-import Generate exposing (..)
+import Parse exposing (parse)
+import Grammar
+import Generate exposing (generate)
 
 
 type alias Model =
@@ -86,7 +86,7 @@ view model =
                     [ -- div [] [ text <| toString <| grammar ]
                       -- div [] [ render grammar ]
                       div []
-                        [ definitionNames grammar
+                        [ Grammar.definitionNames grammar
                             |> List.map
                                 (\name ->
                                     button [ onClick <| RequestGeneration name ]

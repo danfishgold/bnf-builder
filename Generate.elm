@@ -1,6 +1,6 @@
-module Generate exposing (..)
+module Generate exposing (generate)
 
-import Model exposing (..)
+import Grammar exposing (Grammar, Option, OptionPart(..))
 import Random exposing (Generator)
 import Random.Extra exposing (constant, sample)
 
@@ -16,7 +16,7 @@ generate toMsg defName grammar =
 
 definitionGenerator : Grammar -> String -> Generator GenRes
 definitionGenerator grammar defName =
-    getOptions defName grammar
+    Grammar.getOptions defName grammar
         |> Result.map sample
         |> Result.map (Random.andThen (generateMaybeOption grammar defName))
         |> flattenResult

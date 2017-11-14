@@ -1,6 +1,6 @@
-module Parse exposing (..)
+module Parse exposing (parse)
 
-import Model exposing (..)
+import Grammar exposing (Grammar, Definition, Option, OptionPart(..))
 import Parser exposing (..)
 import Parser.LanguageKit exposing (..)
 import Char
@@ -12,7 +12,7 @@ parse : String -> Result String Grammar
 parse content =
     run (definitions |. end) content
         |> Result.mapError (.problem >> toString)
-        |> Result.map grammarFromDefs
+        |> Result.map Grammar.fromDefinitionList
         |> Result.andThen
             (\grammar ->
                 case errors grammar of
@@ -25,7 +25,7 @@ parse content =
 
 
 errors : Grammar -> List String
-errors (Grammar ( dict, defNames )) =
+errors grammar =
     let
         getRecallDefName optionPart =
             case optionPart of
@@ -36,14 +36,19 @@ errors (Grammar ( dict, defNames )) =
                     Nothing
 
         recallNames =
-            dict
+            Grammar.definitionDict grammar
                 |> Dict.values
                 |> List.concat
                 |> List.concat
                 |> List.filterMap getRecallDefName
+                |> Set.fromList
+
+        defNames =
+            Grammar.definitionNames grammar
+                |> Set.fromList
 
         missingDefinitions =
-            Set.diff (Set.fromList recallNames) (Set.fromList defNames)
+            Set.diff recallNames defNames
     in
         missingDefinitions
             |> Set.toList
