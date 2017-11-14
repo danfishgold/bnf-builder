@@ -60,6 +60,16 @@ definitionDict (Grammar ( dict, _ )) =
     dict
 
 
+getOptions : String -> Grammar -> Result String (List Option)
+getOptions defName (Grammar ( dict, _ )) =
+    case Dict.get defName dict of
+        Nothing ->
+            Err <| "Can't find <" ++ defName ++ ">"
+
+        Just options ->
+            Ok options
+
+
 errors : Grammar -> List String
 errors (Grammar ( dict, defNames )) =
     let
