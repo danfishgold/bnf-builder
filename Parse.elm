@@ -5,12 +5,49 @@ import Parser exposing (..)
 import Parser.LanguageKit exposing (..)
 import Char
 import Set
+import Dict
 
 
-parse : String -> Result Error Grammar
+parse : String -> Result String Grammar
 parse content =
     run (definitions |. end) content
+        |> Result.mapError (.problem >> toString)
         |> Result.map grammarFromDefs
+        |> Result.andThen
+            (\grammar ->
+                case errors grammar of
+                    [] ->
+                        Ok grammar
+
+                    firstError :: _ ->
+                        Err firstError
+            )
+
+
+errors : Grammar -> List String
+errors (Grammar ( dict, defNames )) =
+    let
+        getRecallDefName optionPart =
+            case optionPart of
+                Recall defName _ ->
+                    Just defName
+
+                _ ->
+                    Nothing
+
+        recallNames =
+            dict
+                |> Dict.values
+                |> List.concat
+                |> List.concat
+                |> List.filterMap getRecallDefName
+
+        missingDefinitions =
+            Set.diff (Set.fromList recallNames) (Set.fromList defNames)
+    in
+        missingDefinitions
+            |> Set.toList
+            |> List.map (\defName -> "Can't find <" ++ defName ++ ">")
 
 
 definition : Parser Definition

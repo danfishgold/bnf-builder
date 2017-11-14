@@ -6,7 +6,6 @@ import Html.Events exposing (onInput, onClick)
 import Parse exposing (..)
 import Model exposing (..)
 import Generate exposing (..)
-import Parser exposing (run)
 
 
 type alias Model =
@@ -53,28 +52,15 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    let
-        grammar =
-            parse model.content
-
-        errs =
-            grammar |> Result.map errors |> Result.withDefault []
-    in
-        div []
-            [ div [] [ textarea [ onInput EditContent, value model.content ] [] ]
-            , div [] [ text <| toString <| run options model.content ]
-            , div [] [ text <| toString <| grammar ]
-            , div [] [ Result.withDefault (text "") <| Result.map render <| grammar ]
-            , case errs of
-                [] ->
-                    text ""
-
-                errs ->
-                    errs |> List.map (text >> List.singleton >> div []) |> div []
-            , case ( errs, grammar ) of
-                ( [], Ok grm ) ->
-                    div []
-                        [ definitionNames grm
+    div []
+        [ div [] [ textarea [ onInput EditContent, value model.content ] [] ]
+        , case parse model.content of
+            Ok grammar ->
+                div []
+                    [ div [] [ text <| toString <| grammar ]
+                    , div [] [ render grammar ]
+                    , div []
+                        [ definitionNames grammar
                             |> List.map
                                 (\name ->
                                     button [ onClick <| RequestGeneration name ]
@@ -88,10 +74,11 @@ view model =
                             _ ->
                                 text ""
                         ]
+                    ]
 
-                _ ->
-                    text ""
-            ]
+            Err error ->
+                text error
+        ]
 
 
 main : Program Never Model Msg
