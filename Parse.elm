@@ -11,7 +11,7 @@ import Dict
 parse : String -> Result String Grammar
 parse content =
     run (definitions |. end) content
-        |> Result.mapError (.problem >> toString)
+        |> Result.mapError (toString)
         |> Result.map Grammar.fromDefinitionList
         |> Result.andThen
             (\grammar ->
@@ -159,6 +159,39 @@ isVarChar char =
         || Char.isDigit char
         || (char == '_')
         || (char == '-')
+        || List.member char hebrewLetters
+
+
+hebrewLetters : List Char
+hebrewLetters =
+    [ 'א'
+    , 'ב'
+    , 'ג'
+    , 'ד'
+    , 'ה'
+    , 'ו'
+    , 'ז'
+    , 'ח'
+    , 'ט'
+    , 'י'
+    , 'כ'
+    , 'ל'
+    , 'מ'
+    , 'נ'
+    , 'ס'
+    , 'ע'
+    , 'פ'
+    , 'צ'
+    , 'ק'
+    , 'ר'
+    , 'ש'
+    , 'ת'
+    , 'ן'
+    , 'ף'
+    , 'ך'
+    , 'ץ'
+    , 'ם'
+    ]
 
 
 spaces : Parser ()
