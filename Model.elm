@@ -13,11 +13,7 @@ type alias Option =
 
 type OptionPart
     = Str String
-    | SpecialSpace
-    | SpecialPipe
-    | SpecialOpenBrackets
-    | SpecialCloseBrackets
-    | SpecialBackslash
+    | Special Char
     | Recall String String
 
 
@@ -54,20 +50,8 @@ renderOptionPart optionPart =
         Str str ->
             str
 
-        SpecialSpace ->
-            "\\ "
-
-        SpecialPipe ->
-            "\\|"
-
-        SpecialOpenBrackets ->
-            "\\<"
-
-        SpecialCloseBrackets ->
-            "\\>"
-
-        SpecialBackslash ->
-            "\\\\"
+        Special char ->
+            "\\" ++ String.fromChar char
 
         Recall defName options ->
             "<" ++ defName ++ "|" ++ options ++ ">"

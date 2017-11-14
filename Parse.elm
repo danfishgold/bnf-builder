@@ -66,11 +66,11 @@ optionPart =
                 ]
             |. symbol ">"
         , variable isNormalChar isNormalChar Set.empty |> map Str
-        , succeed SpecialSpace |. symbol "\\ "
-        , succeed SpecialPipe |. symbol "\\|"
-        , succeed SpecialOpenBrackets |. symbol "\\<"
-        , succeed SpecialCloseBrackets |. symbol "\\>"
-        , succeed SpecialBackslash |. symbol "\\\\"
+        , succeed (Special ' ') |. symbol "\\ "
+        , succeed (Special '|') |. symbol "\\|"
+        , succeed (Special '<') |. symbol "\\<"
+        , succeed (Special '>') |. symbol "\\>"
+        , succeed (Special '\\') |. symbol "\\\\"
         ]
 
 
