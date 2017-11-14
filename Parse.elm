@@ -46,10 +46,35 @@ options =
 
 option : Parser Option
 option =
-    succeed identity
+    succeed trimOption
         |. spaces
         |= repeat oneOrMore optionPart
         |. spaces
+
+
+trimOptionLeft : Option -> Option
+trimOptionLeft parts =
+    case parts of
+        (Str string) :: tail ->
+            Str (String.trimLeft string) :: tail
+
+        _ ->
+            parts
+
+
+trimOptionRight : Option -> Option
+trimOptionRight parts =
+    case List.reverse parts of
+        (Str string) :: tail ->
+            Str (String.trimRight string) :: tail |> List.reverse
+
+        _ ->
+            parts
+
+
+trimOption : Option -> Option
+trimOption =
+    trimOptionRight >> trimOptionLeft
 
 
 optionPart : Parser OptionPart
