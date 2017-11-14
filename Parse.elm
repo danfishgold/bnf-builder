@@ -7,9 +7,10 @@ import Char
 import Set
 
 
-parse : String -> Result Error (List Definition)
+parse : String -> Result Error Grammar
 parse content =
     run (definitions |. end) content
+        |> Result.map grammarFromDefs
 
 
 definition : Parser Definition
