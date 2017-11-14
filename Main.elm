@@ -26,7 +26,24 @@ type Msg
 
 model : Model
 model =
-    { content = "a | b", generation = NotGenerated }
+    { content = basic, generation = NotGenerated }
+
+
+basic : String
+basic =
+    """nonzero ::= 1|2|3|4|5|6|7|8|9
+digit ::= 0|1|2|3|4|5|6|7|8|9
+two-digit ::= <nonzero><digit>
+
+consonant ::= b|c|d|f|g|k|l|m|n|p|r|s|t|v
+vowel ::= a|o|i|u|e
+pair ::= <consonant><vowel>
+name ::= <pair><pair><consonant>
+
+hello ::= hi | hello | hey
+
+intro ::= <hello>, my name is <name> and I'm <two-digit> years old.
+"""
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
