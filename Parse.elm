@@ -153,6 +153,7 @@ isVarChar char =
         || Char.isUpper char
         || Char.isDigit char
         || (char == '_')
+        || (char == '-')
 
 
 spaces : Parser ()
