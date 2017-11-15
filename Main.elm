@@ -98,8 +98,10 @@ view model =
     div []
         [ h1 [] [ text "BNF Builder" ]
         , div []
-            [ span [ onClick <| SetDirection Ltr ] [ Assets.alignLeft "3em" ]
-            , span [ onClick <| SetDirection Rtl ] [ Assets.alignRight "3em" ]
+            [ div []
+                [ span [ onClick <| SetDirection Ltr ] [ Assets.alignLeft "3em" ]
+                , span [ onClick <| SetDirection Rtl ] [ Assets.alignRight "3em" ]
+                ]
             , textarea
                 [ cols 80
                 , rows 25
