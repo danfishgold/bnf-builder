@@ -1,15 +1,34 @@
 module Main exposing (..)
 
-import Html exposing (Html, program, div, h1, textarea, button, text)
-import Html.Attributes exposing (value, rows, cols)
+import Html exposing (Html, program, div, h1, span, textarea, button, text)
+import Html.Attributes exposing (value, rows, cols, dir)
 import Html.Events exposing (onInput, onClick)
 import Parse exposing (parse)
 import Grammar
 import Generate exposing (generate)
+import Assets
 
 
 type alias Model =
-    { content : String, generation : Generation }
+    { content : String
+    , textDirection : TextDirection
+    , generation : Generation
+    }
+
+
+type TextDirection
+    = Ltr
+    | Rtl
+
+
+dirAttr : TextDirection -> Html.Attribute msg
+dirAttr direction =
+    case direction of
+        Rtl ->
+            dir "rtl"
+
+        Ltr ->
+            dir "ltr"
 
 
 type Generation
@@ -20,13 +39,17 @@ type Generation
 
 type Msg
     = EditContent String
+    | SetDirection TextDirection
     | RequestGeneration String
     | Generated (Result String String)
 
 
 model : Model
 model =
-    { content = basic, generation = NotGenerated }
+    { content = basic
+    , textDirection = Ltr
+    , generation = NotGenerated
+    }
 
 
 basic : String
@@ -52,6 +75,9 @@ update msg model =
         EditContent content ->
             ( { model | content = content }, Cmd.none )
 
+        SetDirection dir ->
+            ( { model | textDirection = dir }, Cmd.none )
+
         RequestGeneration defName ->
             case parse model.content of
                 Ok grammar ->
@@ -72,11 +98,14 @@ view model =
     div []
         [ h1 [] [ text "BNF Builder" ]
         , div []
-            [ textarea
+            [ span [ onClick <| SetDirection Ltr ] [ Assets.alignLeft "3em" ]
+            , span [ onClick <| SetDirection Rtl ] [ Assets.alignRight "3em" ]
+            , textarea
                 [ cols 80
                 , rows 25
                 , onInput EditContent
                 , value model.content
+                , dirAttr model.textDirection
                 ]
                 []
             ]
