@@ -9,6 +9,7 @@ module Grammar
         , definitionNames
         , definitionDict
         , getOptions
+        , optionRecalls
         , render
         )
 
@@ -79,6 +80,20 @@ getOptions defName (Grammar ( dict, _ )) =
 
         Just options ->
             Ok options
+
+
+optionRecalls : Option -> List String
+optionRecalls parts =
+    List.filterMap
+        (\part ->
+            case part of
+                Recall defName _ ->
+                    Just defName
+
+                _ ->
+                    Nothing
+        )
+        parts
 
 
 render : Grammar -> Html msg

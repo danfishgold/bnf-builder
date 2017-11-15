@@ -4,8 +4,8 @@ import Grammar exposing (Grammar, Definition, Option, OptionPart(..))
 import Parser exposing (..)
 import Parser.LanguageKit exposing (..)
 import Char
-import Set
-import Dict
+import Set exposing (Set)
+import Dict exposing (Dict)
 
 
 parse : String -> Result String Grammar
@@ -15,17 +15,40 @@ parse content =
         |> Result.map Grammar.fromDefinitionList
         |> Result.andThen
             (\grammar ->
-                case errors grammar of
-                    [] ->
-                        Ok grammar
-
-                    firstError :: _ ->
-                        Err firstError
+                grammar
+                    |> firstError
+                    |> Maybe.map Err
+                    |> Maybe.withDefault (Ok grammar)
             )
 
 
-errors : Grammar -> List String
-errors grammar =
+firstError : Grammar -> Maybe String
+firstError grammar =
+    case List.head (missingDefinitions grammar) of
+        Just missingDef ->
+            Just <| "Missing definition <" ++ missingDef ++ ">"
+
+        Nothing ->
+            let
+                recursives =
+                    recursiveDefinitions grammar
+
+                recursivesList =
+                    recursives |> Set.map (\name -> "<" ++ name ++ ">")
+            in
+                if Set.isEmpty recursives then
+                    Nothing
+                else
+                    Just <|
+                        "Recursive definitions: "
+                            ++ (recursivesList
+                                    |> Set.toList
+                                    |> String.join ", "
+                               )
+
+
+missingDefinitions : Grammar -> List String
+missingDefinitions grammar =
     let
         getRecallDefName optionPart =
             case optionPart of
@@ -46,13 +69,42 @@ errors grammar =
         defNames =
             Grammar.definitionNames grammar
                 |> Set.fromList
-
-        missingDefinitions =
-            Set.diff recallNames defNames
     in
-        missingDefinitions
+        Set.diff recallNames defNames
             |> Set.toList
-            |> List.map (\defName -> "Can't find <" ++ defName ++ ">")
+
+
+recursiveDefinitions grammar =
+    let
+        areOptionsSafe safeDefinitions opts =
+            opts
+                |> List.any
+                    (Grammar.optionRecalls
+                        >> List.all (flip Set.member safeDefinitions)
+                    )
+
+        dict =
+            Grammar.definitionDict grammar
+
+        ( stationaryDefinitions, remainingDefinitions ) =
+            dict
+                |> Dict.partition (always <| areOptionsSafe Set.empty)
+                |> Tuple.mapFirst (Dict.keys >> Set.fromList)
+
+        helper : Set String -> Dict String (List Option) -> Set String
+        helper alreadySafe remaining =
+            let
+                ( newSafe, newRemaining ) =
+                    remaining |> Dict.partition (always <| areOptionsSafe alreadySafe)
+            in
+                if remaining == newRemaining then
+                    Set.fromList <| Dict.keys remaining
+                else
+                    helper
+                        (Set.union alreadySafe (Set.fromList <| Dict.keys newSafe))
+                        newRemaining
+    in
+        helper stationaryDefinitions remainingDefinitions
 
 
 definition : Parser Definition
