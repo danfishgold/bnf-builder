@@ -1,12 +1,13 @@
 module Main exposing (..)
 
 import Html exposing (Html, program, div, h1, span, textarea, button, text)
-import Html.Attributes exposing (value, rows, cols, dir)
+import Html.Attributes exposing (value, rows, style, dir)
 import Html.Events exposing (onInput, onClick)
 import Parse exposing (parse)
 import Grammar
 import Generate exposing (generate)
 import Assets
+import Examples
 
 
 type alias Model =
@@ -40,33 +41,17 @@ type Generation
 type Msg
     = EditContent String
     | SetDirection TextDirection
+    | SetContentAndDirection String TextDirection
     | RequestGeneration String
     | Generated (Result String String)
 
 
 model : Model
 model =
-    { content = basic
+    { content = Examples.intro
     , textDirection = Ltr
     , generation = NotGenerated
     }
-
-
-basic : String
-basic =
-    """nonzero ::= 1|2|3|4|5|6|7|8|9
-digit ::= 0|1|2|3|4|5|6|7|8|9
-two-digit ::= <nonzero><digit>
-
-consonant ::= b|c|d|f|g|k|l|m|n|p|r|s|t|v
-vowel ::= a|o|i|u|e
-pair ::= <consonant><vowel>
-name ::= <pair><pair><consonant>
-
-hello ::= hi | hello | hey
-
-intro ::= <hello>, my name is <name> and I'm <two-digit> years old.
-"""
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -77,6 +62,9 @@ update msg model =
 
         SetDirection dir ->
             ( { model | textDirection = dir }, Cmd.none )
+
+        SetContentAndDirection content dir ->
+            ( { model | content = content, textDirection = dir }, Cmd.none )
 
         RequestGeneration defName ->
             case parse model.content of
@@ -102,9 +90,14 @@ view model =
                 [ span [ onClick <| SetDirection Ltr ] [ Assets.alignLeft "3em" ]
                 , span [ onClick <| SetDirection Rtl ] [ Assets.alignRight "3em" ]
                 ]
+            , div []
+                [ button [ onClick <| SetContentAndDirection Examples.intro Ltr ] [ text "Intro" ]
+                , button [ onClick <| SetContentAndDirection Examples.rumors Rtl ] [ text "Rumors" ]
+                , button [ onClick <| SetContentAndDirection "" model.textDirection ] [ text "Clear" ]
+                ]
             , textarea
-                [ cols 80
-                , rows 25
+                [ style [ ( "width", "80%" ) ]
+                , rows 51
                 , onInput EditContent
                 , value model.content
                 , dirAttr model.textDirection
