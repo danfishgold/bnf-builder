@@ -18,6 +18,9 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 
 
+-- TYPES
+
+
 type alias Definition =
     { name : String, options : List Option }
 
@@ -34,6 +37,24 @@ type OptionPart
     = Str String
     | Special Char
     | Recall String String
+
+
+
+-- CREATION AND CONVERSION
+
+
+toDefinitionList : Grammar -> List Definition
+toDefinitionList (Grammar ( dict, defNames )) =
+    let
+        definition name =
+            case Dict.get name dict of
+                Nothing ->
+                    Nothing
+
+                Just options ->
+                    Just { name = name, options = options }
+    in
+        defNames |> List.filterMap definition
 
 
 fromDefinitionList : List Definition -> Result String Grammar
@@ -53,6 +74,10 @@ fromDefinitionList defs =
 
             Just error ->
                 Err error
+
+
+
+-- VALIDATION
 
 
 firstError : Dict String (List Option) -> List String -> Maybe String
@@ -159,18 +184,8 @@ recursiveDefinitions dict =
         helper stationaryDefinitions remainingDefinitions
 
 
-toDefinitionList : Grammar -> List Definition
-toDefinitionList (Grammar ( dict, defNames )) =
-    let
-        definition name =
-            case Dict.get name dict of
-                Nothing ->
-                    Nothing
 
-                Just options ->
-                    Just { name = name, options = options }
-    in
-        defNames |> List.filterMap definition
+-- HELPERS
 
 
 definitionNames : Grammar -> List String
@@ -205,6 +220,10 @@ optionRecalls parts =
                     Nothing
         )
         parts
+
+
+
+-- RENDER
 
 
 render : Grammar -> Html msg
