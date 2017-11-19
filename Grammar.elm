@@ -15,6 +15,7 @@ module Grammar
 
 import Html exposing (Html, div, text)
 import Dict exposing (Dict)
+import Set exposing (Set)
 
 
 type alias Definition =
@@ -35,17 +36,127 @@ type OptionPart
     | Recall String String
 
 
-fromDefinitionList : List Definition -> Grammar
+fromDefinitionList : List Definition -> Result String Grammar
 fromDefinitionList defs =
     let
-        pairs =
+        dict =
             defs
                 |> List.map (\{ name, options } -> ( name, options ))
+                |> Dict.fromList
 
         names =
-            defs |> List.map .name
+            List.map .name defs
     in
-        Grammar ( Dict.fromList pairs, names )
+        case firstError dict names of
+            Nothing ->
+                Ok <| Grammar ( dict, names )
+
+            Just error ->
+                Err error
+
+
+firstError : Dict String (List Option) -> List String -> Maybe String
+firstError dict names =
+    case List.head <| Set.toList <| duplicatesInList names of
+        Just duplicateDef ->
+            Just <| "Duplicate definition <" ++ duplicateDef ++ ">"
+
+        Nothing ->
+            case List.head (missingDefinitions dict names) of
+                Just missingDef ->
+                    Just <| "Missing definition <" ++ missingDef ++ ">"
+
+                Nothing ->
+                    let
+                        recursives =
+                            recursiveDefinitions dict
+
+                        recursivesList =
+                            recursives |> Set.map (\name -> "<" ++ name ++ ">")
+                    in
+                        if Set.isEmpty recursives then
+                            Nothing
+                        else
+                            Just <|
+                                "Recursive definitions: "
+                                    ++ (recursivesList
+                                            |> Set.toList
+                                            |> String.join ", "
+                                       )
+
+
+missingDefinitions : Dict String (List Option) -> List String -> List String
+missingDefinitions dict names =
+    let
+        getRecallDefName optionPart =
+            case optionPart of
+                Recall defName _ ->
+                    Just defName
+
+                _ ->
+                    Nothing
+
+        recallNames =
+            dict
+                |> Dict.values
+                |> List.concat
+                |> List.concat
+                |> List.filterMap getRecallDefName
+                |> Set.fromList
+
+        defNames =
+            Set.fromList names
+    in
+        Set.diff recallNames defNames
+            |> Set.toList
+
+
+duplicatesInList : List comparable -> Set comparable
+duplicatesInList xs =
+    let
+        duplicatesHelper xs alreadyDuplicate =
+            case xs of
+                [] ->
+                    Set.fromList alreadyDuplicate
+
+                first :: rest ->
+                    if List.member first rest then
+                        duplicatesHelper rest (first :: alreadyDuplicate)
+                    else
+                        duplicatesHelper rest alreadyDuplicate
+    in
+        duplicatesHelper xs []
+
+
+recursiveDefinitions : Dict String (List Option) -> Set String
+recursiveDefinitions dict =
+    let
+        areOptionsSafe safeDefinitions opts =
+            opts
+                |> List.any
+                    (optionRecalls
+                        >> List.all (flip Set.member safeDefinitions)
+                    )
+
+        ( stationaryDefinitions, remainingDefinitions ) =
+            dict
+                |> Dict.partition (always <| areOptionsSafe Set.empty)
+                |> Tuple.mapFirst (Dict.keys >> Set.fromList)
+
+        helper : Set String -> Dict String (List Option) -> Set String
+        helper alreadySafe remaining =
+            let
+                ( newSafe, newRemaining ) =
+                    remaining |> Dict.partition (always <| areOptionsSafe alreadySafe)
+            in
+                if remaining == newRemaining then
+                    Set.fromList <| Dict.keys remaining
+                else
+                    helper
+                        (Set.union alreadySafe (Set.fromList <| Dict.keys newSafe))
+                        newRemaining
+    in
+        helper stationaryDefinitions remainingDefinitions
 
 
 toDefinitionList : Grammar -> List Definition
